@@ -77,13 +77,14 @@ public class Browser {
 
     try {
       driver.get("https://www.cnn.com");
+      log.info("Waiting for page to finish loading...");
       driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(15));
     } catch (RuntimeException e) {
-      log.error("Error during warm-up", e);
+      log.error("Error while loading page", e);
     } finally {
       try {
-        log.info("Waiting for 60 seconds...");
-        Thread.sleep(60 * 1_000L);
+        log.info("Waiting for 5 seconds...");
+        Thread.sleep(5 * 1_000L);
       } catch (InterruptedException e) {
         //
       }
