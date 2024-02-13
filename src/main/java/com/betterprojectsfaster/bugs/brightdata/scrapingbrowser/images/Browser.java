@@ -33,16 +33,14 @@ public class Browser {
 
   private WebDriver driver;
 
-  public static WebDriver connect(String auth) throws Exception {
+  public static WebDriver connect(String auth, boolean blockPictures) throws Exception {
     var address = new URL("https://" + auth + "@brd.superproxy.io:9515");
-    var options = new ChromeOptions();
+    var options = configureChrome(blockPictures);
+
     return new RemoteWebDriver(address, options);
   }
 
-  @PostConstruct
-  void init() throws Exception {
-    log.info("Setting up Selenium...");
-
+  private static ChromeOptions configureChrome(boolean blockPictures) {
     var options = new ChromeOptions();
 
     if (blockPictures) {
@@ -53,11 +51,19 @@ public class Browser {
     } else {
       log.info("NOT blocking pictures");
     }
+    return options;
+  }
+
+  @PostConstruct
+  void init() throws Exception {
+    log.info("Setting up Selenium...");
+
+    var options = configureChrome(blockPictures);
 
     if (remoteBrowser) {
 
       if (StringUtils.isNotBlank(remoteBrowserAuth)) {
-        driver = connect(remoteBrowserAuth);
+        driver = connect(remoteBrowserAuth, blockPictures);
         log.info("Remote browser initialized.");
       } else {
         throw new InvalidArgumentException("Remote browser URL not set!");
@@ -73,12 +79,13 @@ public class Browser {
     log.info("Done setting up Selenium.");
   }
 
+
   public void goToPage() {
 
     log.info("Opening page...");
 
     try {
-      driver.get("https://www.cnn.com");
+      driver.get("https://en.wikipedia.org/");
       log.info("Waiting for page to finish loading...");
       driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(15));
     } catch (RuntimeException e) {
