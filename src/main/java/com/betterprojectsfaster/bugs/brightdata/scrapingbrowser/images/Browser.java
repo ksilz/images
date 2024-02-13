@@ -2,7 +2,6 @@ package com.betterprojectsfaster.bugs.brightdata.scrapingbrowser.images;
 
 import io.github.bonigarcia.wdm.WebDriverManager;
 import jakarta.annotation.PostConstruct;
-import java.io.IOException;
 import java.net.URL;
 import java.time.Duration;
 import java.util.HashMap;
@@ -11,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.openqa.selenium.InvalidArgumentException;
+import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.remote.RemoteWebDriver;
@@ -28,13 +28,19 @@ public class Browser {
   @Value("#{new Boolean('${app.browser.blockPictures.enabled:true}')}")
   private boolean blockPictures;
 
-  @Value("${app.browser.remote.url:''}")
-  private String remoteBrowserUrl;
+  @Value("${app.browser.remote.auth:''}")
+  private String remoteBrowserAuth;
 
-  private RemoteWebDriver driver;
+  private WebDriver driver;
+
+  public static WebDriver connect(String auth) throws Exception {
+    var address = new URL("https://" + auth + "@brd.superproxy.io:9515");
+    var options = new ChromeOptions();
+    return new RemoteWebDriver(address, options);
+  }
 
   @PostConstruct
-  void init() throws IOException {
+  void init() throws Exception {
     log.info("Setting up Selenium...");
 
     var options = new ChromeOptions();
@@ -50,12 +56,8 @@ public class Browser {
 
     if (remoteBrowser) {
 
-      if (StringUtils.isNotBlank(remoteBrowserUrl)) {
-        options.setCapability("browserName", "chrome");
-
-        var browserUrl = new URL(remoteBrowserUrl);
-
-        driver = new RemoteWebDriver(browserUrl, options);
+      if (StringUtils.isNotBlank(remoteBrowserAuth)) {
+        driver = connect(remoteBrowserAuth);
         log.info("Remote browser initialized.");
       } else {
         throw new InvalidArgumentException("Remote browser URL not set!");
